@@ -61,3 +61,45 @@ s$neutral<-ifelse(s$negative+s$positive==0,1,0)
 head(s)
 
 barplot(100*colSums(s)/sum(s),las=2,col = rainbow(10),ylab = "Porcentaje %",main = "Resultados analisis Youtube CrashCourse")
+
+
+
+################### Nube de palabras ###################### 
+
+dfTJ<-do.call("rbind",lapply(data$Comment,as.data.frame))
+head(dfTJ$text)
+colnames(dfTJ)<-c("text")
+
+dfTJ$text<-sapply(dfTJ$text,function(row) iconv(row,"UTF-8","latin1",sub=""))
+head(dfTJ$text)
+dfTJ$text<-gsub("(f|ht)tp(s?)://(.*)[.][a-z]+","",dfTJ$text) #Elimina las URL
+head(dfTJ$text)
+dfTJtx<-dfTJ$text
+
+txt_corpus<-Corpus(VectorSource(dfTJtx))
+View(txt_corpus)
+
+txt_corpus<-tm_map(txt_corpus,tolower)
+txt_corpus<-tm_map(txt_corpus,removePunctuation)
+txt_corpus<-tm_map(txt_corpus,removeNumbers)
+txt_corpus<-tm_map(txt_corpus,stripWhitespace)
+
+#Eliminar las palabras de conexion. 
+txt_corpus<-tm_map(txt_corpus,removeWords,stopwords("en"))
+
+head(txt_corpus$content)
+View(txt_corpus)
+
+dtm<-DocumentTermMatrix(txt_corpus)
+dtm<-as.matrix(dtm)
+dtm<-t(dtm)
+View(dtm)
+
+#Suma el numero de apariciones
+number_ocurrences=rowSums(dtm)
+number_ocurrences=sort(number_ocurrences,decreasing = TRUE)
+head(number_ocurrences)
+
+wordcloud(head(names(number_ocurrences),35),head(number_ocurrences,35),scale = c(3,2))
+
+
